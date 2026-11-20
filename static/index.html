@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Real Estate AI Agent — Sarah's Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #f0f2f5;
+    color: #1f2328;
+  }
+
+  header {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header span { font-size: 13px; opacity: .7; }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .card + .card { margin-top: 16px; }
+  .card h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #57606a;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  label { display: block; font-size: 12px; font-weight: 600; color: #57606a; margin-bottom: 3px; }
+  input, textarea, select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    color: #1f2328;
+    transition: border-color .15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #3b82d4;
+    box-shadow: 0 0 0 3px rgba(59,130,212,.15);
+  }
+  .field { margin-bottom: 12px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { background: #1a3a5c; color: #fff; }
+  .btn-success { background: #2d6a4f; color: #fff; }
+  .btn-danger  { background: #b91c1c; color: #fff; }
+  .btn-sm      { padding: 5px 10px; font-size: 12px; }
+  .btn-full    { width: 100%; justify-content: center; }
+
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .step-tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f7f8fa;
+    border: none;
+    border-right: 1px solid #e5e7eb;
+    color: #57606a;
+    transition: background .15s, color .15s;
+  }
+  .step-tab:last-child { border-right: none; }
+  .step-tab.active { background: #1a3a5c; color: #fff; }
+  .step-tab.done   { background: #d1fae5; color: #2d6a4f; }
+
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  .listing-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #f7f8fa;
+  }
+  .listing-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .listing-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #e5e7eb;
+    color: #1f2328;
+  }
+  .pill.green  { background: #d1fae5; color: #2d6a4f; }
+  .pill.yellow { background: #fef9c3; color: #854d0e; }
+  .pill.red    { background: #fee2e2; color: #991b1b; }
+  .pill.blue   { background: #dbeafe; color: #1d4ed8; }
+  .score-bar { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .score-fill { height: 100%; background: #1a3a5c; border-radius: 3px; transition: width .4s ease; }
+
+  .draft-box {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .draft-subject { font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+  .draft-body { white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #1f2328; }
+  .draft-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .status-pending  { background: #fef9c3; color: #854d0e; }
+  .status-approved { background: #d1fae5; color: #2d6a4f; }
+  .status-rejected { background: #fee2e2; color: #991b1b; }
+
+  .weight-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+  .weight-label { width: 110px; color: #57606a; flex-shrink: 0; }
+  .weight-bar-bg { flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+  .weight-bar-fill { height: 100%; background: #3b82d4; border-radius: 4px; transition: width .4s ease; }
+  .weight-val { width: 36px; text-align: right; font-weight: 700; color: #1f2328; }
+
+  .sentiment-positive { color: #2d6a4f; font-weight: 700; }
+  .sentiment-negative { color: #991b1b; font-weight: 700; }
+  .sentiment-neutral  { color: #57606a; font-weight: 700; }
+  .note-item {
+    background: #f7f8fa;
+    border-left: 3px solid #3b82d4;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.info    { background: #1a3a5c; }
+  #toast.success { background: #2d6a4f; }
+  #toast.error   { background: #b91c1c; }
+
+  .mt8 { margin-top: 8px; }
+  .muted { color: #57606a; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>&#127968; Real Estate AI Agent System</h1>
+    <span>Sarah's dashboard &mdash; 3-agent workflow</span>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- LEFT: Client Profile form -->
+  <aside>
+    <div class="card">
+      <h2>Client Profile</h2>
+
+      <div class="field">
+        <label>Client Name</label>
+        <input id="f-name" type="text" placeholder="e.g. The Johnson Family" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Min Beds</label>
+          <input id="f-min-beds" type="number" min="1" max="10" value="3" />
+        </div>
+        <div class="field">
+          <label>Max Beds</label>
+          <input id="f-max-beds" type="number" min="1" max="10" value="5" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Min Price ($)</label>
+          <input id="f-min-price" type="number" step="5000" value="300000" />
+        </div>
+        <div class="field">
+          <label>Max Price ($)</label>
+          <input id="f-max-price" type="number" step="5000" value="600000" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Zip Codes (comma-separated)</label>
+        <input id="f-zips" type="text" placeholder="e.g. 62701, 62702" value="62701, 62702" />
+      </div>
+
+      <div class="field">
+        <label>Top N Results</label>
+        <input id="f-top-n" type="number" min="1" max="10" value="3" />
+      </div>
+
+      <button class="btn btn-primary btn-full mt8" onclick="runSearch()">
+        &#9654; Run Agent 1 &amp; 2 &mdash; Search &amp; Draft Email
+      </button>
+    </div>
+
+    <!-- Live preference weights -->
+    <div class="card">
+      <h2>Preference Weights (live)</h2>
+      <div id="weights-display">
+        <p class="muted">Run a search to see weights.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Step workflow -->
+  <main>
+    <div class="steps">
+      <button class="step-tab active" id="tab-1" onclick="showTab(1)">1 &middot; Search Results</button>
+      <button class="step-tab"        id="tab-2" onclick="showTab(2)">2 &middot; Email Draft</button>
+      <button class="step-tab"        id="tab-3" onclick="showTab(3)">3 &middot; Buyer Feedback</button>
+      <button class="step-tab"        id="tab-4" onclick="showTab(4)">4 &middot; Re-run Search</button>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step-panel active" id="panel-1">
+      <div class="card">
+        <h2>Step 1 &mdash; Agent 1: MLS Search &amp; Scoring</h2>
+        <div id="listings-output">
+          <p class="muted">No search run yet. Fill in the Client Profile and click Run.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-panel" id="panel-2">
+      <div class="card">
+        <h2>Step 2 &mdash; Agent 2: Email Draft Review</h2>
+        <div id="draft-output">
+          <p class="muted">No draft yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-panel" id="panel-3">
+      <div class="card">
+        <h2>Step 3 &mdash; Agent 3: Buyer Feedback &amp; Preference Tuning</h2>
+        <div class="field">
+          <label>Listing (MLS ID)</label>
+          <select id="f-mls-id">
+            <option value="">— select a listing —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Buyer's Reply</label>
+          <textarea id="f-feedback" rows="5"
+            placeholder="e.g. We loved the price and neighborhood on MLS001 but it felt too small. We'd love more move-in ready homes!"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitFeedback()">
+          &#9654; Run Agent 3 &mdash; Parse &amp; Tune Weights
+        </button>
+        <div id="feedback-result" class="mt8"></div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-panel" id="panel-4">
+      <div class="card">
+        <h2>Step 4 &mdash; Re-run Search with Updated Weights</h2>
+        <p class="muted" style="margin-bottom:12px">
+          Runs the same Agent 1 + 2 pipeline using the preference weights updated by Agent 3.
+        </p>
+        <button class="btn btn-primary" onclick="rerunSearch()">
+          &#9654; Re-run Agent 1 &amp; 2
+        </button>
+        <div id="rerun-output" class="mt8"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  var state = { clientId: null, draftId: null, listings: [] };
+
+  function toast(msg, type) {
+    type = type || "info";
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "show " + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function() { t.className = ""; }, 3000);
+  }
+
+  function showTab(n) {
+    document.querySelectorAll(".step-panel").forEach(function(p) { p.classList.remove("active"); });
+    document.querySelectorAll(".step-tab").forEach(function(t) { t.classList.remove("active"); });
+    document.getElementById("panel-" + n).classList.add("active");
+    document.getElementById("tab-" + n).classList.add("active");
+  }
+
+  function conditionPill(c) {
+    var map = {
+      move_in_ready: ["Move-In Ready", "green"],
+      updated:       ["Updated",       "yellow"],
+      fixer_upper:   ["Fixer Upper",   "red"]
+    };
+    var entry = map[c] || [c, ""];
+    return '<span class="pill ' + entry[1] + '">' + entry[0] + '</span>';
+  }
+
+  function renderWeights(weights) {
+    var labels = {
+      price_value: "Price Value", neighborhood: "Neighborhood",
+      size_match: "Size Match", condition: "Condition", listing_age: "Listing Age"
+    };
+    return Object.keys(weights).map(function(k) {
+      var v = weights[k];
+      return '<div class="weight-row">' +
+        '<div class="weight-label">' + (labels[k] || k) + '</div>' +
+        '<div class="weight-bar-bg"><div class="weight-bar-fill" style="width:' + Math.round(v * 100) + '%"></div></div>' +
+        '<div class="weight-val">' + (v * 100).toFixed(1) + '%</div>' +
+        '</div>';
+    }).join("");
+  }
+
+  function renderListings(listings, containerId) {
+    var el = document.getElementById(containerId);
+    if (!listings.length) {
+      el.innerHTML = '<p class="muted">No listings matched the search criteria.</p>';
+      return;
+    }
+    el.innerHTML = listings.map(function(l) {
+      return '<div class="listing-card">' +
+        '<h3>' + l.address + '</h3>' +
+        '<div class="listing-meta">' +
+          '<span class="pill blue">$' + l.price.toLocaleString() + '</span>' +
+          '<span class="pill">' + l.beds + 'bd / ' + l.baths + 'ba</span>' +
+          '<span class="pill">' + l.sqft.toLocaleString() + ' sqft</span>' +
+          '<span class="pill">' + l.days_on_market + 'd on market</span>' +
+          conditionPill(l.condition) +
+          '<span class="pill">' + l.mls_id + '</span>' +
+        '</div>' +
+        '<div class="muted">' + l.description + '</div>' +
+        '<div class="score-bar"><div class="score-fill" style="width:' + Math.round(l.relevance_score * 100) + '%"></div></div>' +
+        '<div class="muted mt8">Relevance score: <strong>' + l.relevance_score.toFixed(2) + '</strong></div>' +
+        '</div>';
+    }).join("");
+  }
+
+  function renderDraft(draft) {
+    var el = document.getElementById("draft-output");
+    el.innerHTML =
+      '<div class="draft-box">' +
+        '<div class="draft-subject">' + draft.subject +
+          ' <span class="status-badge status-' + draft.status + '" id="draft-status-badge">' + draft.status + '</span>' +
+        '</div>' +
+        '<div class="draft-body">' + draft.body + '</div>' +
+      '</div>' +
+      '<div class="draft-actions" id="draft-actions">' +
+        '<button class="btn btn-success btn-sm" onclick="approveDraft()">&#10004; Approve</button>' +
+        '<button class="btn btn-danger btn-sm"  onclick="rejectDraft()">&#10008; Reject</button>' +
+      '</div>';
+  }
+
+  function post(url, body) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
+      return r.json();
+    });
+  }
+
+  function runSearch() {
+    var name = document.getElementById("f-name").value.trim();
+    if (!name) { toast("Please enter a client name.", "error"); return; }
+
+    var payload = {
+      client_id: state.clientId,
+      name:      name,
+      min_beds:  document.getElementById("f-min-beds").value,
+      max_beds:  document.getElementById("f-max-beds").value,
+      min_price: document.getElementById("f-min-price").value,
+      max_price: document.getElementById("f-max-price").value,
+      zip_codes: document.getElementById("f-zips").value,
+      top_n:     document.getElementById("f-top-n").value
+    };
+
+    toast("Running Agent 1 & 2\u2026");
+    post("/api/search", payload).then(function(data) {
+      state.clientId = data.client_id;
+      state.draftId  = data.draft.draft_id;
+      state.listings = data.listings;
+
+      renderListings(data.listings, "listings-output");
+      document.getElementById("tab-1").classList.add("done");
+
+      renderDraft(data.draft);
+      document.getElementById("tab-2").classList.add("done");
+
+      var sel = document.getElementById("f-mls-id");
+      sel.innerHTML = '<option value="">— select a listing —</option>' +
+        data.listings.map(function(l) {
+          return '<option value="' + l.mls_id + '">' + l.mls_id + ' — ' + l.address + '</option>';
+        }).join("");
+
+      document.getElementById("weights-display").innerHTML = renderWeights(data.profile.preference_weights);
+
+      showTab(1);
+      toast("Search complete — " + data.listings.length + " listing(s) found.", "success");
+    }).catch(function(e) { toast("Error: " + e.message, "error"); });
+  }
+
+  function approveDraft() {
+    if (!state.draftId) return;
+    post("/api/draft/" + state.draftId + "/approve", { client_id: state.clientId })
+      .then(function() {
+        document.getElementById("draft-status-badge").textContent = "approved";
+        document.getElementById("draft-status-badge").className = "status-badge status-approved";
+        document.getElementById("draft-actions").innerHTML = '<span class="muted">Draft approved — ready to send.</span>';
+        document.getElementById("tab-2").classList.add("done");
+        toast("Draft approved!", "success");
+      }).catch(function(e) { toast("Error: " + e.message, "error"); });
+  }
+
+  function rejectDraft() {
+    if (!state.draftId) return;
+    post("/api/draft/" + state.draftId + "/reject", { client_id: state.clientId })
+      .then(function() {
+        document.getElementById("draft-status-badge").textContent = "rejected";
+        document.getElementById("draft-status-badge").className = "status-badge status-rejected";
+        document.getElementById("draft-actions").innerHTML = '<span class="muted">Draft rejected. Update the criteria and re-run.</span>';
+        toast("Draft rejected.", "error");
+      }).catch(function(e) { toast("Error: " + e.message, "error"); });
+  }
+
+  function submitFeedback() {
+    var mls_id = document.getElementById("f-mls-id").value;
+    var text   = document.getElementById("f-feedback").value.trim();
+    if (!mls_id || !text) { toast("Select a listing and enter feedback text.", "error"); return; }
+    if (!state.clientId)  { toast("Run a search first.", "error"); return; }
+
+    toast("Running Agent 3\u2026");
+    post("/api/feedback", { client_id: state.clientId, mls_id: mls_id, feedback_text: text })
+      .then(function(data) {
+        var notesHtml = data.notes.map(function(n) {
+          return '<div class="note-item">' + n + '</div>';
+        }).join("");
+        document.getElementById("feedback-result").innerHTML =
+          '<p>Sentiment: <span class="sentiment-' + data.sentiment + '">' + data.sentiment.toUpperCase() + '</span></p>' +
+          '<p class="muted mt8">Boosted: ' + (data.boosted.join(", ") || "none") + ' &nbsp;|&nbsp; Reduced: ' + (data.reduced.join(", ") || "none") + '</p>' +
+          '<div class="mt8">' + notesHtml + '</div>';
+
+        document.getElementById("weights-display").innerHTML = renderWeights(data.weights);
+        document.getElementById("tab-3").classList.add("done");
+        toast("Feedback processed — weights updated.", "success");
+      }).catch(function(e) { toast("Error: " + e.message, "error"); });
+  }
+
+  function rerunSearch() {
+    if (!state.clientId) { toast("Run a search first.", "error"); return; }
+    var payload = {
+      client_id: state.clientId,
+      name:      document.getElementById("f-name").value.trim(),
+      min_beds:  document.getElementById("f-min-beds").value,
+      max_beds:  document.getElementById("f-max-beds").value,
+      min_price: document.getElementById("f-min-price").value,
+      max_price: document.getElementById("f-max-price").value,
+      zip_codes: document.getElementById("f-zips").value,
+      top_n:     document.getElementById("f-top-n").value
+    };
+
+    toast("Re-running with updated weights\u2026");
+    post("/api/search", payload).then(function(data) {
+      state.draftId = data.draft.draft_id;
+
+      var out = document.getElementById("rerun-output");
+      out.innerHTML = '<h3 style="font-size:13px;margin-bottom:12px">Updated Listings</h3>' +
+        '<div id="rerun-listings"></div>' +
+        '<h3 style="font-size:13px;margin:16px 0 8px">New Draft</h3>' +
+        '<div class="draft-box">' +
+          '<div class="draft-subject">' + data.draft.subject + '</div>' +
+          '<div class="draft-body">' + data.draft.body + '</div>' +
+        '</div>';
+
+      renderListings(data.listings, "rerun-listings");
+      document.getElementById("weights-display").innerHTML = renderWeights(data.profile.preference_weights);
+      document.getElementById("tab-4").classList.add("done");
+      toast("Re-run complete.", "success");
+    }).catch(function(e) { toast("Error: " + e.message, "error"); });
+  }
+</script>
+</body>
+</html>
